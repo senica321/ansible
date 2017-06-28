@@ -1,0 +1,52 @@
+- hosts: haproxy
+
+  tasks:
+# update system
+  - name: update apt cache
+    apt: update_cache=yes
+    sudo: yes
+
+# install haproxy package
+  - name: install haproxy
+    apt: name=haproxy state=present
+    sudo: yes
+
+#enable init script for haproxy
+  - name: Enable init script
+    replace: dest='/etc/default/haproxy'
+           regexp='ENABLED=0'
+           replace='ENABLED=1'
+
+# set directory permissions for haproxy folder to nobody:root
+  - name: set directory permissions
+    file: dest=/etc/haproxy state=directory
+          owner=nobody group=root
+          mode=0777
+          recurse=yes
+    sudo: yes
+
+# copy haproxy.cfg file to server
+  - name: Update HAProxy config
+    template: src=/home/senica/Desktop/conf_files/haproxy.cfg
+          dest=/etc/haproxy/haproxy.cfg
+          backup=yes
+    notify:
+      - restart haproxy
+
+# set directory permissions for haproxy folder to haproxy:haproxy
+  - name: set directory permissions
+    file: dest=/etc/haproxy state=directory
+          owner=haproxy group=haproxy
+          mode=0777
+          recurse=yes
+    sudo: yes
+
+# handler used to restart haproxy
+  handlers:
+  - name: restart haproxy
+    service: name=haproxy state=restarted
+    sudo: yse
+
+#https://serversforhackers.com/load-balancing-with-haproxy
+
+#http://blog.toast38coza.me/setup-and-configure-haproxy-with-ansible/

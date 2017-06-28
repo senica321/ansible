@@ -1,0 +1,48 @@
+---
+- hosts:
+    - webserver
+
+  tasks:
+# update system
+  - name: Update apt cache
+    apt: update_cache=yes
+    sudo: yes
+
+#install samba package
+  - name: install samba server
+    sudo: yes
+    action: apt pkg=samba state=present
+
+#create group
+  - name: create group
+    group: name=sambagroup state=present
+
+#create directory with ownership
+  - name: create directory
+    file: path=/home/senica/sambafolder state=directory owner=senica group=sambagroup
+    sudo: yes
+
+#copy config file from config folder to /etc/samba/smb.conf
+  - name: copy samba config file
+    copy: src=/home/senica/Desktop/conf_files/smb.conf dest=/etc/samba/ force=yes
+    sudo: yes
+
+#add user to group
+  - name: adding existing user to group
+    user: name=senica
+          groups=sambagroup
+          append=yes
+    sudo: yes
+
+#problem cant find service to start
+#restart smbd service
+#  - name: restart smbd service
+#    notify:
+#      - restart smbd
+#    sudo: yes
+#
+#  handlers:
+#  - include: handlers/smbdrestart.yml
+
+# add a user using sudo smbpasswd -a senica and then restart samba using
+# sudo service smbd restart. install client and connect using smbclient -L senica

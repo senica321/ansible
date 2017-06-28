@@ -1,0 +1,4 @@
+ # handler for restarting smbd
+  - name: restart smbd
+    service: name=/etc/rc.d/init.d/smb state=restarted
+    sudo: yes  

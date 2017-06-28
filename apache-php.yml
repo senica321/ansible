@@ -1,0 +1,41 @@
+---
+- hosts:
+    - webserver
+
+  tasks:
+# update system
+  - name: Update apt cache
+    apt: update_cache=yes
+    sudo: yes
+
+#install apache package
+  - name: install web server
+    sudo: yes
+    action: apt pkg=apache2 state=present
+
+#install php packages
+  - name: Install php7.0
+    sudo: yes
+    action: apt pkg=php7.0 state=present
+
+  - name: Install libapache2-mod-php7.0
+    sudo: yes
+    action: apt pkg=libapache2-mod-php7.0 state=present
+
+  - name: Install php7.0-mcrypt
+    sudo: yes
+    action: apt pkg=php7.0-mcrypt state=present
+
+  - name: Install phpp7.0-mysql
+    sudo: yes
+    action: apt pkg=php7.0-mysql state=present
+
+#install php extensions
+  - name: Install php extension php7.0-gd
+    sudo: yes
+    action: apt pkg=php7.0-gd state=present
+
+
+  - name: Install php extension libssh2-1-dev
+    sudo: yes
+    action: apt pkg=libssh2-1-dev state=present

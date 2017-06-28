@@ -1,0 +1,55 @@
+---
+- hosts:
+    - webserver
+
+  tasks:
+# update system
+  - name: Update apt cache
+    apt: update_cache=yes
+    sudo: yes
+
+#install wordpress
+  - name: Download WordPress
+    get_url: url=https://wordpress.org/latest.tar.gz dest=/tmp/wordpress.tar.gz
+    sudo: yes
+
+  - name: Extract WordPress
+    unarchive: src=/tmp/wordpress.tar.gz dest=/var/www/ copy=no
+    sudo: yes
+
+#set permissions of var/www to nobody, root.
+  - name: Set download dir permissions
+    file: dest=var/www state=directory
+          owner=nobody group=root
+          mode=0777
+          recurse=yes
+    sudo: yes
+
+# copy wordpress files from server to desktop
+  - name: copy wordpress files
+    copy: src=/home/senica/Desktop/wordpress.tar.gz dest=/tmp force=yes
+    sudo: yes
+
+#extract wordpress website files to var/www
+  - name: Extract WordPress
+    unarchive: src=/tmp/wordpress.tar.gz dest=/var/www/ force=yes copy=no
+    sudo: yes
+
+#set permissions of var/www to www:data
+  - name: Set var/www permissions
+    file: dest=var/www state=directory
+          owner=www-data group=www-data
+          mode=0777
+          recurse=yes
+    sudo: yes
+
+#update and restart apache
+  - name: Update default Apache site
+    sudo: yes
+    lineinfile: dest=/etc/apache2/sites-enabled/000-default.conf regexp="(.)+DocumentRoot /var/www/html" line="DocumentRoot /var/www/wordpress"
+    notify:
+      - restart apache
+    sudo: yes
+
+  handlers:
+  - include: handlers/apacherestart.yml

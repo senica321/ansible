@@ -1,0 +1,79 @@
+---
+- hosts:
+    - webserver
+
+  tasks:
+
+#install mysql server
+  - name: Install mysql-server
+    sudo: yes
+    action: apt pkg=mysql-server state=present
+
+#install python-mysqldp package needed my mysql 
+  - name: Install python-mysqldb
+    sudo: yes
+    action: apt pkg=python-mysqldb state=present
+
+#create global my.cnf file
+  - name: Create global my.cnf
+    sudo: yes
+    template: src=/home/senica/Desktop/my.cnf dest=/home/senica/.my.cnf
+
+#update root password for all root accounts
+  - name: update mysql root password for all root accounts
+    mysql_user: name=root host={{ item }}  password=0000
+    with_items:
+      - $ansible_hostname
+      - 192.168.145.153
+      - 127.0.0.1
+      - ::1  
+      - localhost
+
+#remove mysql test database
+  - name: Remove the MySQL test database
+    mysql_db: name=test state=absent
+
+#create user named senica for database
+  - name: Add senica db user
+    mysql_user: name=senica host=localhost password=0000 priv='*.*:ALL,GRANT' state=present
+
+#create new wordpress database
+  - name: Create a new database with name 'wordpress'
+    mysql_db:
+      name: wordpress
+      state: present
+      #login_host: localhost
+      #login_password: 0000
+    register: db_created
+
+#copy database dump files
+  - name: Copy database dump file
+    copy: src=/home/senica/Desktop/dump.sql dest=/tmp
+
+#restore database
+  - name: Restore database
+    mysql_db:
+      name: wordpress
+      state: import
+      target: /tmp/dump.sql
+    when: db_created.changed
+
+#dump database to hostname
+  - name: Dump all databases to hostname.sql
+    mysql_db:
+      state: dump
+      name: all
+      target: /tmp/{{ inventory_hostname }}.sql
+
+#import hostnames
+  - name: Import file.sql similar to mysql -u <username> -p <password> < hostname.sql
+    mysql_db:
+      state: import
+      name: all
+      target: /tmp/{{ inventory_hostname }}.sql
+
+#restart mysql
+  - name: Restart the MySQL service
+    action: service name=mysql state=restarted enabled=true
+    sudo: yes
+

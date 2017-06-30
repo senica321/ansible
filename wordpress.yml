@@ -35,6 +35,11 @@
     unarchive: src=/tmp/wordpress.tar.gz dest=/var/www/ force=yes copy=no
     sudo: yes
 
+#set wp-config database address
+  - name: setup wp-config database address
+    sudo: yes
+    lineinfile: dest=/var/www/wordpress/wp-config.php regexp="^define\(\'DB_HOST" line="define('DB_HOST', '192.168.145.165');"
+
 #set permissions of var/www to www:data
   - name: Set var/www permissions
     file: dest=var/www state=directory

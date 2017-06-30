@@ -1,6 +1,6 @@
 ---
 - hosts:
-    - webserver
+    - dbserver
 
   tasks:
 
@@ -21,13 +21,13 @@
 
 #update root password for all root accounts
   - name: update mysql root password for all root accounts
+#    sudo: yes
     mysql_user: name=root host={{ item }}  password=0000
     with_items:
-      - $ansible_hostname
-      - 192.168.145.153
       - 127.0.0.1
       - ::1  
       - localhost
+    
 
 #remove mysql test database
   - name: Remove the MySQL test database
@@ -36,6 +36,12 @@
 #create user named senica for database
   - name: Add senica db user
     mysql_user: name=senica host=localhost password=0000 priv='*.*:ALL,GRANT' state=present
+
+#
+#create user for web server 1 
+  - name: Add web server 1 user
+    mysql_user: name=senica host=192.168.145.164 password=0000 priv='*.*:ALL,GRANT' state=present
+
 
 #create new wordpress database
   - name: Create a new database with name 'wordpress'
@@ -71,6 +77,12 @@
       state: import
       name: all
       target: /tmp/{{ inventory_hostname }}.sql
+
+
+#set database address
+  - name: set database address
+    sudo: yes
+    lineinfile: dest=/etc/mysql/mysql.conf.d/mysqld.cnf regexp='^bind-address' line='bind-address = 192.168.145.165'
 
 #restart mysql
   - name: Restart the MySQL service
